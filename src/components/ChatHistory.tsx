@@ -1,6 +1,6 @@
-import { ChatSession } from '../services/geminiService';
-import { Button } from './ui/button';
-import { ScrollArea } from './ui/scroll-area';
+import { ChatSession } from '@/services/geminiService';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   MessageSquare, 
   Plus, 
@@ -8,14 +8,14 @@ import {
   Settings,
   MoreVertical 
 } from 'lucide-react';
-import { cn } from '../lib/utils';
+import { cn } from '@/lib/utils';
 import { useRef, useState } from 'react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from './ui/dropdown-menu';
+} from '@/components/ui/dropdown-menu';
 
 interface ChatHistoryProps {
   sessions: ChatSession[];

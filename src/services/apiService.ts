@@ -52,16 +52,22 @@ function url(path: string) {
 
 async function fetchWithFallback(inputPath: string, init?: RequestInit): Promise<Response> {
   const p = inputPath.startsWith('/') ? inputPath : `/${inputPath}`;
+  const candidateSet = new Set<string>();
   const candidates: string[] = [];
-  if (API_BASE) candidates.push(url(p));
-  candidates.push(p);
+  const add = (u: string) => { if (!candidateSet.has(u)) { candidateSet.add(u); candidates.push(u); } };
+  if (API_BASE) add(url(p));
+  add(p);
   // Dev convenience: when UI runs on :8080 (or :4000), also try FastAPI on :8000
   try {
     const host = typeof window !== 'undefined' ? window.location.host : '';
-    if (/localhost:8080|127\.0\.0\.1:8080|localhost:4000/.test(host) || (API_BASE && /localhost:4000/.test(API_BASE))) {
-      candidates.push(`http://localhost:8000${p}`);
+    if (/localhost:8080|127\.0\.0\.1:8080|localhost:4000|127\.0\.0\.1:4000/.test(host) || (API_BASE && /localhost:4000|127\.0\.0\.1:4000/.test(API_BASE))) {
+      add(`http://localhost:8000${p}`);
+      add(`http://127.0.0.1:8000${p}`);
     }
   } catch {}
+  // Always ensure direct fallbacks to common dev ports are present
+  add(`http://localhost:8000${p}`);
+  add(`http://127.0.0.1:8000${p}`);
 
   let lastErr: any = null;
   for (let i = 0; i < candidates.length; i++) {
@@ -69,8 +75,12 @@ async function fetchWithFallback(inputPath: string, init?: RequestInit): Promise
     try {
       const res = await fetch(target, init);
       const isRelative = target.startsWith('/');
-      if (!res.ok && isRelative && (res.status === 404 || res.status === 405) && i < candidates.length - 1) {
-        continue;
+      // Retry on common non-ok statuses to try next candidate (e.g., fallback to :8000)
+      if (!res.ok && i < candidates.length - 1) {
+        const retryable = res.status >= 500 || res.status === 404 || res.status === 405 || res.status === 0;
+        if (retryable) {
+          continue;
+        }
       }
       return res;
     } catch (e) {
@@ -144,9 +154,85 @@ export async function sendMessage(
   onStream?: (delta: string) => void,
 ): Promise<{ userMessage: Message; assistantMessage: Message } | string> {
   if (onStream) {
-    const res = await fetch(url(`/api/threads/${threadId}/messages`), {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // Stream with proper SSE parsing and auth headers, using fallback targets
+    const res = await fetchWithFallback(`/api/threads/${threadId}/messages`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream', ...DEFAULT_HEADERS },
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'text/event-stream',
+        ...DEFAULT_HEADERS,
+        ...authHeader(),
+      },
       body: JSON.stringify({ content, stream: true }),
     });
     if (!res.ok || !res.body) {
@@ -155,29 +241,78 @@ export async function sendMessage(
 
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
+    let buffer = '';
     let full = '';
     while (true) {
       const { value, done } = await reader.read();
       if (done) break;
-      const chunk = decoder.decode(value, { stream: true });
-      // Parse SSE lines like: data: {"delta":"text"}
-      for (const line of chunk.split('\n')) {
+      buffer += decoder.decode(value, { stream: true });
+      // Normalize CRLF to LF
+      buffer = buffer.replace(/\r\n/g, '\n');
+      let nlIdx = buffer.indexOf('\n');
+      while (nlIdx !== -1) {
+        const line = buffer.slice(0, nlIdx);
+        buffer = buffer.slice(nlIdx + 1);
         const trimmed = line.trim();
-        if (!trimmed.startsWith('data:')) continue;
-        const jsonPart = trimmed.slice(5).trim();
-        try {
-          const obj = JSON.parse(jsonPart);
-          if (obj.error) {
-            throw new Error(typeof obj.error === 'string' ? obj.error : 'assistant_unavailable');
-          }
-          if (obj.delta) {
-            full += obj.delta as string;
-            onStream(obj.delta as string);
-          }
-          // done event ignored here; backend persists final message server-side
-        } catch {
-          // ignore parse errors on keepalives
+        // Skip comments/keepalives starting with ':' or empty lines
+        if (!trimmed || trimmed.startsWith(':')) {
+          nlIdx = buffer.indexOf('\n');
+          continue;
         }
+        if (trimmed.startsWith('data:')) {
+          const jsonPart = trimmed.slice(5).trim();
+          try {
+            const obj = JSON.parse(jsonPart);
+            if (obj.error) {
+              throw new Error(typeof obj.error === 'string' ? obj.error : 'assistant_unavailable');
+            }
+            if (obj.delta) {
+              const delta = String(obj.delta);
+              full += delta;
+              onStream(delta);
+            }
+            // Optional: break if server signals done
+            if (obj.done) {
+              // Do not break early; ensure body reader drains to let server finish cleanly
+            }
+          } catch {
+            // Keep partial JSON in buffer by prefixing it back for next iteration
+            buffer = jsonPart + '\n' + buffer;
+          }
+        }
+        nlIdx = buffer.indexOf('\n');
+      }
+    }
+    // Process any trailing line without newline
+    const tail = buffer.trim();
+    if (tail.startsWith('data:')) {
+      const jsonPart = tail.slice(5).trim();
+      try {
+        const obj = JSON.parse(jsonPart);
+        if (obj.delta) {
+          const delta = String(obj.delta);
+          full += delta;
+          onStream(delta);
+        }
+      } catch {
+        // Ignore
+      }
+    }
+    // If stream yielded nothing, make a non-streaming request as fallback
+    if (!full.trim()) {
+      try {
+        const data = await http<{ userMessage: Message; assistantMessage: Message }>(`/api/threads/${threadId}/messages`, {
+          method: 'POST',
+          body: JSON.stringify({ content }),
+        });
+        const text = data.assistantMessage?.content || '';
+        if (text) {
+          onStream(text);
+          return text;
+        }
+      } catch (e) {
+        // Rethrow to be handled by caller
+        throw e;
       }
     }
     return full;

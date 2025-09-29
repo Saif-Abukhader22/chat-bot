@@ -1,11 +1,11 @@
 import { useEffect, useRef } from 'react';
-import { ScrollArea } from './ui/scroll-area';
-import { MessageBubble } from './MessageBubble';
-import { ChatInput } from './ChatInput';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { MessageBubble } from '@/components/MessageBubble';
+import { ChatInput } from '@/components/ChatInput';
 import { Sparkles } from 'lucide-react';
-import { cn } from '../lib/utils';
-import heroImage from '../assets/ai-brain-hero.png';
-import type { ChatSession } from '../services/geminiService';
+import { cn } from '@/lib/utils';
+import heroImage from '@/assets/ai-brain-hero.png';
+import type { ChatSession } from '@/services/geminiService';
 
 interface ChatInterfaceProps {
   onOpenSettings: () => void;

@@ -1,4 +1,4 @@
-import { ChatSession, Message } from './geminiService';
+import { ChatSession, Message } from '@/services/geminiService';
 
 const STORAGE_KEYS = {
   CHAT_SESSIONS: 'chat-sessions',
