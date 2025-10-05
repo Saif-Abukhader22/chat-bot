@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
+import { Button } from './ui/button';
 import { Copy, Check } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from '../lib/utils';
 
 // Import Prism.js for syntax highlighting
 import Prism from 'prismjs';

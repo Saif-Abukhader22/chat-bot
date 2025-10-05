@@ -597,5 +597,4 @@ MIT License - see LICENSE file for details
 
 ---
 
-**Happy Coding! 🚀**#   c h a t - b o t  
- 
+**Happy Coding! 🚀**

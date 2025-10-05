@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ChatSession, Message } from '@/services/geminiService';
-import { useToast } from '@/hooks/use-toast';
+import { ChatSession, Message } from '../services/geminiService';
+import { useToast } from './use-toast';
 import {
   getAgents,
   listThreads as apiListThreads,
@@ -10,8 +10,8 @@ import {
   updateThread as apiUpdateThread,
   type Thread as ApiThread,
   type Message as ApiMessage,
-} from '@/services/apiService';
-import { health as apiHealth } from '@/services/apiService';
+} from '../services/apiService';
+import { health as apiHealth } from '../services/apiService';
 
 export const useChat = () => {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
@@ -147,12 +147,9 @@ export const useChat = () => {
   }, [currentSession, sessions, toast]);
 
   const sendMessage = useCallback(async (content: string) => {
-    console.log('[useChat] sendMessage called');
     let session = currentSession;
     if (!session) {
-      console.log('[useChat] no current session, creating...');
       session = await createNewSession();
-      console.log('[useChat] new session created:', session.id);
     }
 
     const userMessage: Message = {
@@ -181,15 +178,10 @@ export const useChat = () => {
     setCurrentSession(updatedSession);
     setIsLoading(true);
     setIsStreaming(true);
-    console.log('[useChat] start streaming via apiSendMessage');
 
     try {
       let assistantResponse = '';
       await apiSendMessage(session!.id, content, (delta: string) => {
-        if (delta) {
-          // Only log short preview to avoid noise
-          console.log('[useChat] delta:', delta.slice(0, 40));
-        }
         assistantResponse += delta;
         setSessions(prev => prev.map(s => {
           if (s.id !== session!.id) return s;
@@ -208,7 +200,6 @@ export const useChat = () => {
       });
 
       // Mark streaming complete
-      console.log('[useChat] streaming complete, total len:', assistantResponse.length);
       setSessions(prev => prev.map(s => {
         if (s.id !== session!.id) return s;
         return {
@@ -224,17 +215,15 @@ export const useChat = () => {
         };
       });
 
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error sending message:', error);
-      const msg = (error && error.message) ? String(error.message) : 'Failed to send message via server.';
-      toast({ title: 'Assistant error', description: msg, variant: 'destructive' });
+      toast({ title: 'Error', description: 'Failed to send message via server.', variant: 'destructive' });
       // Remove failed assistant message
       setSessions(prev => prev.map(s => (s.id === session!.id ? { ...s, messages: s.messages.filter(m => m.id !== assistantMessage.id) } : s)));
       setCurrentSession(prev => (prev && prev.id === session!.id ? { ...prev, messages: prev.messages.filter(m => m.id !== assistantMessage.id) } : prev));
     } finally {
       setIsLoading(false);
       setIsStreaming(false);
-      console.log('[useChat] sendMessage finished');
     }
   }, [currentSession, createNewSession, toast]);
 

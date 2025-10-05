@@ -1,8 +1,8 @@
-import { Message } from '@/services/geminiService';
-import { cn } from '@/lib/utils';
+import { Message } from '../services/geminiService';
+import { cn } from '../lib/utils';
 import { GraduationCap, User, Loader2 } from 'lucide-react';
-import { CodeBlock } from '@/components/CodeBlock';
-import { PlanVisualizer, type DegreePlan } from '@/components/PlanVisualizer';
+import { CodeBlock } from './CodeBlock';
+import { PlanVisualizer, type DegreePlan } from './PlanVisualizer';
 
 interface MessageBubbleProps {
   message: Message;

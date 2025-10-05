@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { login as apiLogin, signup as apiSignup, me as apiMe, logout as apiLogout, type AuthUser } from '@/services/authService';
+import { login as apiLogin, signup as apiSignup, me as apiMe, logout as apiLogout, type AuthUser } from '../services/authService';
 
 export function useAuth() {
   const [user, setUser] = useState<AuthUser | null>(null);

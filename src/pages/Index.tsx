@@ -1,5 +1,5 @@
-import { ChatApp } from '@/pages/ChatApp';
-import { useAuth } from '@/hooks/useAuth';
+import { ChatApp } from './ChatApp';
+import { useAuth } from '../hooks/useAuth';
 import { Navigate } from 'react-router-dom';
 
 const Index = () => {

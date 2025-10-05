@@ -1,19 +1,19 @@
 import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/useAuth';
-import { updateProfile, changePassword } from '@/services/authService';
+} from './ui/dialog';
+import { useToast } from '../hooks/use-toast';
+import { useAuth } from '../hooks/useAuth';
+import { updateProfile, changePassword } from '../services/authService';
 import { Save, User as UserIcon, LogOut } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 
 interface SettingsDialogProps {
   open: boolean;

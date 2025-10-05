@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
-import { ChatHistory } from '@/components/ChatHistory';
-import { ChatInterface } from '@/components/ChatInterface';
-import { SettingsDialog } from '@/components/SettingsDialog';
-import { useChat } from '@/hooks/useChat';
-import { Button } from '@/components/ui/button';
+import { ChatHistory } from '../components/ChatHistory';
+import { ChatInterface } from '../components/ChatInterface';
+import { SettingsDialog } from '../components/SettingsDialog';
+import { useChat } from '../hooks/useChat';
+import { Button } from '../components/ui/button';
 import { Menu, X } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from '../lib/utils';
 
 export const ChatApp = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
